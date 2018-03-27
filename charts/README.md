@@ -46,51 +46,56 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Configuration
 
-The following table lists the configurable parameters of the MySQL chart and their default values.
+The following table lists the configurable parameters of the Drone chart and their default values.
 
-| Parameter                            | Description                               | Default                                              |
-| ------------------------------------ | ----------------------------------------- | ---------------------------------------------------- |
-| `namespace`                           | Namespace to deploy drone to                  | Drone                                 |
-| `server.image`                       | Image to use for Drone's server              | `drone`                                       |
-| `server.imageTag`                  | Drone-server image version            | `nil`                                                |
-| `server.imageRegistry`                          | Docker registry to pull from          | `nil`                                                |
-| `server.admin`                      | Registered github administrators              | `nil`            |
-| `server.debug`                      | Debug mode          | `nil`              |
-| `server.resources`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
-| `db.driver`  | Delay before liveness probe is initiated  | 30             |
-| `db.source`        | How often to perform the probe            | 10                                                   |
-| `db.conf.name`       | When the probe times out                  | 5                                                    |
-| `db.conf.mountPath`     | Minimum consecutive successes for the probe to be considered successful after having failed. | 1 |
-| `agent.image`     | Image to use for Drone's agent    | 3 |
-| `agent.imageTag` | Drone-agent image tag | 5     |
-| `agent.imageRegistry`       | Docker registry to pull from             | 10     |
-| `agent.replicas`      | How many agent replicas show run                | 1             |
-| `agent.procs.max`    | Minimum consecutive failures for the probe to be considered failed after having succeeded.   | 3 |
-| `agent.keepalive.time`                | Create a volume to store data             | true |
-| `agent.keepalive.timeout`                   | Size of persistent volume claim           | 8Gi RW  |
-| `agent.healthCheck`           | Enabled gRPC healthchecking         | nil  (uses alpha storage class annotation)  |
-| `agent.debug.enabled`             | Debug mode               | ReadWriteOnce   |
-| `agent.debug.pretty`          | Pretty logs      | `nil`   |
-| `agent.resources`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
-| `dind.mountPath`                | Path to docker daemon to expose      | `nil`  |
-| `gitea.enabled`                 | List of mysql configuration files         | `nil`      |
-| `gitea.url`                | Subdirectory of the volume to mount       | `nil`  |
-| `gitea.skip.verify`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
-| `persistence.enabled`                 | Whether to enable persistence via a `pvc`        | `nil`      |
-| `persistence.accessMode`                | Subdirectory of the volume to mount       | `nil`  |
-| `persistence.size`                          | Size of persistent storage       | Memory: `256Mi`, CPU: `100m`  |
-| `configurationFiles`                 | List of mysql configuration files         | `nil`      |
-Some of the parameters above map to the env variables defined in the [MySQL DockerHub image](https://hub.docker.com/_/mysql/).
+| Parameter                             | Description                               | Default                         |
+| ------------------------------------  | ----------------------------------------- | --------------------------------|
+| `namespace`                           | Namespace to deploy drone to              | drone                           |
+| `server.image`                        | Image to use for Drone's server           | `drone`                         |
+| `server.imageTag`                     | Drone-server image version                | `0.8`                           |
+| `server.imageRegistry`                | Docker registry to pull from              | `drone`                         |
+| `server.admin`                        | Registered github administrators          | appleboy                        |
+| `server.debug`                        | Debug mode                                | `false`                         |
+| `server.resources`                    | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`    |
+| `server.service.type`                 | Service type for the Drone server         | `LoadBalancer`                  |
+| `server.service.httpPort`             | Exposed port for Web UI                   | 8000                            |
+| `server.service.grpcPort`             | Exposed port for gRPC calls to clients    | 9000                            |
+| `db.driver`                           | Delay before liveness probe is initiated  | sqlite3                         |
+| `db.source`                           | How often to perform the probe            | `nil`                           |
+| `db.conf.name`                        | When the probe times out                  | drone-server-sqlite-db          |
+| `db.conf.mountPath`                   | Path to mount database config to          | /var/lib/drone                  |
+| `agent.image`                         | Image to use for Drone's agent            | `drone-agent`                   |
+| `agent.imageTag`                      | Drone-agent image tag                     | `0.8`                           |
+| `agent.imageRegistry`                 | Docker registry to pull from              | `drone`                         |
+| `agent.replicas`                      | How many agent replicas show run          | 1                               |
+| `agent.procs.max`                     | Max processes the agent will run at once  | 3                               |
+| `agent.keepalive.time`                | Create a volume to store data             | 1s                              |
+| `agent.keepalive.timeout`             | Size of persistent volume claim           | 5s                              |
+| `agent.healthCheck`                   | Enabled gRPC healthchecking               | `true`                          |
+| `agent.debug.enabled`                 | Debug mode                                | `false`                         |
+| `agent.debug.pretty`                  | Pretty logs                               | `true`                          |
+| `agent.resources`                     | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`    |
+| `dind.mountPath`                      | Path to docker daemon to expose           | `/var/run/docker.sock`          |
+| `gitea.enabled`                       | List of mysql configuration files         | `true`                          |
+| `gitea.url`                           | Subdirectory of the volume to mount       | https://try.gitea.io            |
+| `gitea.skip.verify`                   | CPU/Memory resource requests/limits       | `true`                          |
+| `persistence.enabled`                 | Whether to enable persistence via a `pvc` | `true`                          |
+| `persistence.accessMode`              | Subdirectory of the volume to mount       | `ReadWriteOnce`                 |
+| `persistence.size`                    | Size of persistent storage                | `8Gi`                           |
+| `configurationFiles`                  | List of mysql configuration files         | `nil`                           |
+| `livenessProbe.httpGet.path`          | List of mysql configuration files         | `nil`                           |
+| `livenessProbe.httpGet.port`          | List of mysql configuration files         | `nil`                           |
+| `livenessProbe.initialDelaySeconds`   | List of mysql configuration files         | `nil`                           |
+| `livenessProbe.periodSeconds`         | List of mysql configuration files         | `nil`                           |
+
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release \
-  --set mysqlRootPassword=secretpassword,mysqlUser=my-user,mysqlPassword=my-password,mysqlDatabase=my-database \
-    stable/mysql
+$ helm install --name my-release --set namespace=drone,agent.replicas=3 stable/drone
 ```
 
-The above command sets the MySQL `root` account password to `secretpassword`. Additionally it creates a standard database user named `my-user`, with the password `my-password`, who has access to a database named `my-database`.
+The above command restricts the Drone release to the `drone` namespace. Additionally it creates a a policy creating three replicas of the `drone-agent` deployment.
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
@@ -102,7 +107,7 @@ $ helm install --name my-release -f values.yaml stable/drone
 
 ## Persistence
 
-The [Drone](https://hub.docker.com/_/mysql/) image stores data and configurations at the `/var/lib/drone` path of the container.
+The [Drone](https://hub.docker.com/drone/drone/) image stores data and configurations at the `/var/lib/drone` path of the container.
 
 By default a PersistentVolumeClaim is created and mounted into that directory. In order to disable this functionality
 you can change the values.yaml to disable persistence and use an emptyDir instead.
