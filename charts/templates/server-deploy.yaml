@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ template "server.name" . }}
+  name: {{ template "drone.name" . }}
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.server.replicas }}
@@ -20,10 +20,8 @@ spec:
         - containerPort: 9000
           protocol: TCP
         volumeMounts:
-          # Persist our configs in an SQLite DB in here
           - name: {{ .Values.db.conf.name }}
             mountPath: {{ .Values.db.conf.mountPath }}
-          # Enables Docker in Docker
           - name: docker-socket
             mountPath: {{ .Values.dind.mountPath }}
         resources:
@@ -67,17 +65,13 @@ spec:
               key: github-secret.toml
 {{ end -}}
       volumes:
-        - name: data
-{{- if .Values.persistence.enabled }}
+        - name: {{ .Values.db.conf.name }}
+{{- if .Values.db.enabled }}
           persistentVolumeClaim:
-          claimName: {{ .Values.persistence.existingClaim | default (include "mysql.fullname" .) }}
+          claimName: {{ .Values.db.existingClaim | default "drone-data" }}
       {{- else }}
         emptyDir: {}
 {{- end -}}
-        - name: drone-server-sqlite-db
-          gcePersistentDisk:
-            pdName:  drone-server-sqlite-db
-            fsType: ext4
         - name: docker-socket
           hostPath:
             path: /var/run/docker.sock

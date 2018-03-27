@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ template "agent.name" . }}
+  name: {{ .Values.agent.name }}
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.agent.replicas }}
@@ -13,7 +13,7 @@ spec:
       containers:
       - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
         imagePullPolicy: IfNotPresent
-        name: {{ template "agent.name" . }}
+        name: {{ .Values.agent.name }}
         volumeMounts:
           - name: docker-socket
             mountPath: {{ .Values.dind.mountPath }}
@@ -23,15 +23,9 @@ spec:
 {{ .Values.livenessProbe | indent 8 }}
         env:
         - name: DRONE_SERVER
-          value: drone-service:9000
-        # issue: https://github.com/drone/drone/issues/2048
+          value: {{ .Values.server.service.name }}:{{ .Values.server.service.grpcPort }}
         - name: DOCKER_API_VERSION
-          value: "1.24"
-        - name: DRONE_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: drone-secrets
-              key: drone-secret.toml
+          value: {{ .Values.docker.apiVersion | quote }}
         - name: DRONE_MAX_PROCS
           value: {{ .Values.agent.procs.max }}
         - name: DRONE_DEBUG
@@ -44,6 +38,11 @@ spec:
           value: {{ .Values.agent.keepalive.time }}
         - name: DRONE_KEEPALIVE_TIMEOUT
           value: {{ .Values.agent.keepalive.timeout }}
+        - name: DRONE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: drone-secrets
+              key: drone-secret.toml
       volumes:
         - name: docker-socket
           hostPath:

@@ -64,6 +64,7 @@ The following table lists the configurable parameters of the Drone chart and the
 | `db.source`                           | How often to perform the probe            | `nil`                           |
 | `db.conf.name`                        | When the probe times out                  | drone-server-sqlite-db          |
 | `db.conf.mountPath`                   | Path to mount database config to          | /var/lib/drone                  |
+| `agent.name`                          | Kubernetes name selector for agent        | `drone-agent`                   |
 | `agent.image`                         | Image to use for Drone's agent            | `drone-agent`                   |
 | `agent.imageTag`                      | Drone-agent image tag                     | `0.8`                           |
 | `agent.imageRegistry`                 | Docker registry to pull from              | `drone`                         |

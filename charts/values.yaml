@@ -8,12 +8,14 @@ server:
   debug: true
   ## Configure the service
   service:
+    name: drone-service
     type: LoadBalancer
     httpPort: 8000
     grpcPort: 9000
 
 
 agent:
+  name: drone-agent
   image: "drone-agent"
   imageTag: "0.8"
   imageRegistry: "drone"
@@ -39,8 +41,11 @@ db:
   driver: sqlite3
   source: drone.sqlite
   conf:
-    name: drone-server-sqlite-db
+    name: data
     mountPath: /var/lib/drone
+
+docker:
+  apiVersion: 1.24
 
 dind:
   mountPath: /var/run/docker.sock

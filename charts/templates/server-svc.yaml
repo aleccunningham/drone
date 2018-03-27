@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "server.name" . }}
+  name: {{ template "drone.name" . }}
   namespace: {{ .Values.namespace }}
 spec:
   type: {{ .Values.service.type }}
