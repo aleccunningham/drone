@@ -1,17 +1,21 @@
-# MySQL
+# Drone
 
-[MySQL](https://MySQL.org) is one of the most popular database servers in the world. Notable users include Wikipedia, Facebook and Google.
+[Drone](https://drone.io) is an open source Continuous Delivery platform that automates your testing and release workflows.
 
 ## Introduction
 
-This chart bootstraps a single node MySQL deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a single node Drone server and agent deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 
-- Kubernetes 1.6+ with Beta APIs enabled
+- Kubernetes 1.9+ with RBAC Authentication enabled
 - PV provisioner support in the underlying infrastructure
 
 ## Installing the Chart
+
+Prior to running helm commands, create a `secrets/` directory inside `charts/`, and set secrets as follows:
+```secret-name.toml```
+You can then reference them in manifests via `secretKeyRef`'s set to the secrets file name.
 
 To install the chart with the release name `my-release`:
 
@@ -46,31 +50,36 @@ The following table lists the configurable parameters of the MySQL chart and the
 
 | Parameter                            | Description                               | Default                                              |
 | ------------------------------------ | ----------------------------------------- | ---------------------------------------------------- |
-| `imageTag`                           | `mysql` image tag.                        | Most recent release                                  |
-| `imagePullPolicy`                    | Image pull policy                         | `IfNotPresent`                                       |
-| `mysqlRootPassword`                  | Password for the `root` user.             | `nil`                                                |
-| `mysqlUser`                          | Username of new user to create.           | `nil`                                                |
-| `mysqlPassword`                      | Password for the new user.                | `nil`                                                |
-| `mysqlDatabase`                      | Name for new database to create.          | `nil`                                                |
-| `livenessProbe.initialDelaySeconds`  | Delay before liveness probe is initiated  | 30                                                   |
-| `livenessProbe.periodSeconds`        | How often to perform the probe            | 10                                                   |
-| `livenessProbe.timeoutSeconds`       | When the probe times out                  | 5                                                    |
-| `livenessProbe.successThreshold`     | Minimum consecutive successes for the probe to be considered successful after having failed. | 1 |
-| `livenessProbe.failureThreshold`     | Minimum consecutive failures for the probe to be considered failed after having succeeded.   | 3 |
-| `readinessProbe.initialDelaySeconds` | Delay before readiness probe is initiated | 5                                                    |
-| `readinessProbe.periodSeconds`       | How often to perform the probe            | 10                                                   |
-| `readinessProbe.timeoutSeconds`      | When the probe times out                  | 1                                                    |
-| `readinessProbe.successThreshold`    | Minimum consecutive successes for the probe to be considered successful after having failed. | 1 |
-| `readinessProbe.failureThreshold`    | Minimum consecutive failures for the probe to be considered failed after having succeeded.   | 3 |
-| `persistence.enabled`                | Create a volume to store data             | true                                                 |
-| `persistence.size`                   | Size of persistent volume claim           | 8Gi RW                                               |
-| `persistence.storageClass`           | Type of persistent volume claim           | nil  (uses alpha storage class annotation)           |
-| `persistence.accessMode`             | ReadWriteOnce or ReadOnly                 | ReadWriteOnce                                        |
-| `persistence.existingClaim`          | Name of existing persistent volume        | `nil`                                                |
-| `persistence.subPath`                | Subdirectory of the volume to mount       | `nil`                                                |
-| `resources`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`                         |
-| `configurationFiles`                 | List of mysql configuration files         | `nil`                                                |
-
+| `namespace`                           | Namespace to deploy drone to                  | Drone                                 |
+| `server.image`                       | Image to use for Drone's server              | `drone`                                       |
+| `server.imageTag`                  | Drone-server image version            | `nil`                                                |
+| `server.imageRegistry`                          | Docker registry to pull from          | `nil`                                                |
+| `server.admin`                      | Registered github administrators              | `nil`            |
+| `server.debug`                      | Debug mode          | `nil`              |
+| `server.resources`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
+| `db.driver`  | Delay before liveness probe is initiated  | 30             |
+| `db.source`        | How often to perform the probe            | 10                                                   |
+| `db.conf.name`       | When the probe times out                  | 5                                                    |
+| `db.conf.mountPath`     | Minimum consecutive successes for the probe to be considered successful after having failed. | 1 |
+| `agent.image`     | Image to use for Drone's agent    | 3 |
+| `agent.imageTag` | Drone-agent image tag | 5     |
+| `agent.imageRegistry`       | Docker registry to pull from             | 10     |
+| `agent.replicas`      | How many agent replicas show run                | 1             |
+| `agent.procs.max`    | Minimum consecutive failures for the probe to be considered failed after having succeeded.   | 3 |
+| `agent.keepalive.time`                | Create a volume to store data             | true |
+| `agent.keepalive.timeout`                   | Size of persistent volume claim           | 8Gi RW  |
+| `agent.healthCheck`           | Enabled gRPC healthchecking         | nil  (uses alpha storage class annotation)  |
+| `agent.debug.enabled`             | Debug mode               | ReadWriteOnce   |
+| `agent.debug.pretty`          | Pretty logs      | `nil`   |
+| `agent.resources`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
+| `dind.mountPath`                | Path to docker daemon to expose      | `nil`  |
+| `gitea.enabled`                 | List of mysql configuration files         | `nil`      |
+| `gitea.url`                | Subdirectory of the volume to mount       | `nil`  |
+| `gitea.skip.verify`                          | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`  |
+| `persistence.enabled`                 | Whether to enable persistence via a `pvc`        | `nil`      |
+| `persistence.accessMode`                | Subdirectory of the volume to mount       | `nil`  |
+| `persistence.size`                          | Size of persistent storage       | Memory: `256Mi`, CPU: `100m`  |
+| `configurationFiles`                 | List of mysql configuration files         | `nil`      |
 Some of the parameters above map to the env variables defined in the [MySQL DockerHub image](https://hub.docker.com/_/mysql/).
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
@@ -86,31 +95,16 @@ The above command sets the MySQL `root` account password to `secretpassword`. Ad
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release -f values.yaml stable/mysql
+$ helm install --name my-release -f values.yaml stable/drone
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
 ## Persistence
 
-The [MySQL](https://hub.docker.com/_/mysql/) image stores the MySQL data and configurations at the `/var/lib/mysql` path of the container.
+The [Drone](https://hub.docker.com/_/mysql/) image stores data and configurations at the `/var/lib/drone` path of the container.
 
 By default a PersistentVolumeClaim is created and mounted into that directory. In order to disable this functionality
 you can change the values.yaml to disable persistence and use an emptyDir instead.
 
 > *"An emptyDir volume is first created when a Pod is assigned to a Node, and exists as long as that Pod is running on that node. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted forever."*
-
-## Custom MySQL configuration files
-
-The [MySQL](https://hub.docker.com/_/mysql/) image accepts custom configuration files at the path `/etc/mysql/conf.d`. If you want to use a customized MySQL configuration, you can create your alternative configuration files by passing the file contents on the `configurationFiles` attribute. Note that according to the MySQL documentation only files ending with `.cnf` are loaded.
-
-```yaml
-configurationFiles:
-  mysql.cnf: |-
-    [mysqld]
-    skip-host-cache
-    skip-name-resolve
-    sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
-  mysql_custom.cnf: |-
-    [mysqld]
-```

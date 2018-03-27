@@ -1,33 +1,26 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: drone-agent
-  namespace: drone
+  name: {{ template "agent.name" . }}
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.agent.replicas }}
   template:
     metadata:
       labels:
-        app: drone-agent
+        app: {{ template "agent.name" . }}
     spec:
       containers:
-      - image: drone/agent:latest
-        imagePullPolicy: Always
-        name: drone-agent
+      - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
+        imagePullPolicy: IfNotPresent
+        name: {{ template "agent.name" . }}
         volumeMounts:
-          # Enables Docker in Docker
           - name: docker-socket
-            mountPath: /var/run/docker.sock
+            mountPath: {{ .Values.dind.mountPath }}
         resources:
-          requests:
-            cpu: 100m
-            memory: 64Mi
+{{ .Values.resources | indent 8 }}
         livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 3000
-          initialDelaySeconds: 3
-          periodSeconds: 3
+{{ .Values.livenessProbe | indent 8 }}
         env:
         - name: DRONE_SERVER
           value: drone-service:9000
@@ -38,39 +31,20 @@ spec:
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: server.secret
+              key: drone-secret.toml
         - name: DRONE_MAX_PROCS
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.max.procs
+          value: {{ .Values.agent.procs.max }}
         - name: DRONE_DEBUG
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.debug
+          value: {{ .Values.agent.debug.enabled }}
         - name: DRONE_DEBUG_PRETTY
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.debug.pretty
+          value: {{ .Values.agent.debug.pretty }}
         - name: DRONE_HEALTHCHECK
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.healthcheck
+          value: {{ .Values.agent.healthcheck }}
         - name: DRONE_KEEPALIVE_TIME
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.keepalive.time
+          value: {{ .Values.agent.keepalive.time }}
         - name: DRONE_KEEPALIVE_TIMEOUT
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: agent.keepalive.timeout
-
+          value: {{ .Values.agent.keepalive.timeout }}
       volumes:
         - name: docker-socket
           hostPath:
-            path: /var/run/docker.sock
+            path: {{ .Values.dind.mountPath }}

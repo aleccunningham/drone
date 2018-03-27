@@ -1,54 +1,49 @@
-ns: drone
-## mysql image version
-## ref: https://hub.docker.com/r/library/mysql/tags/
-##
-image: "mysql"
-imageTag: "5.7.14"
-
-github:
-  client: #client key
-  secret: #secret key
+namespace: drone
 
 server:
-  secret:
+  image: "drone"
+  imageTag: "0.8"
+  imageRegistry: "drone"
+  admin: appleboy
+  debug: true
 
-## Specify password for root user
-##
-## Default: random 10 character string
-# mysqlRootPassword: testing
+db:
+  driver: sqlite3
+  source: drone.sqlite
+  conf:
+    name: drone-server-sqlite-db
+    mountPath: /var/lib/drone
 
-## Create a database user
-##
-# mysqlUser:
-# mysqlPassword:
+agent:
+  image: "drone-agent"
+  imageTag: "0.8"
+  imageRegistry: "drone"
+  replicas: 1
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  procs:
+    max: 1
+  keepalive:
+    time: "1s"
+    timeout: "5s"
+  healthcheck: true
+  debug:
+    enabled: true
+    pretty: true
 
-## Allow unauthenticated access, uncomment to enable
-##
-# mysqlAllowEmptyPassword: true
+dind:
+  mountPath: /var/run/docker.sock
 
-## Create a database
-##
-# mysqlDatabase:
-
-## Specify an imagePullPolicy (Required)
-## It's recommended to change this to 'Always' if the image tag is 'latest'
-## ref: http://kubernetes.io/docs/user-guide/images/#updating-images
-##
-imagePullPolicy: IfNotPresent
-
-livenessProbe:
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  successThreshold: 1
-  failureThreshold: 3
-
-readinessProbe:
-  initialDelaySeconds: 5
-  periodSeconds: 10
-  timeoutSeconds: 1
-  successThreshold: 1
-  failureThreshold: 3
+gitea:
+  enabled: true
+  url: "https://try.gitea.io"
+  skip:
+    verify: true
 
 ## Persist data to a persistent volume
 persistence:
@@ -64,26 +59,21 @@ persistence:
   accessMode: ReadWriteOnce
   size: 8Gi
 
-## Configure resource requests and limits
-## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-##
-resources:
-  requests:
-    memory: 256Mi
-    cpu: 100m
-
 # Custom mysql configuration files used to override default mysql settings
 configurationFiles:
 #  mysql.cnf: |-
 #    [mysqld]
 #    skip-name-resolve
 
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 3000
+  initialDelaySeconds: 3
+  periodSeconds: 3
 
 ## Configure the service
-## ref: http://kubernetes.io/docs/user-guide/services/
 service:
-  ## Specify a service type
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
-  type: ClusterIP
-  port: 3306
-  # nodePort: 32000
+  type: LoadBalancer
+  httpPort: 8000
+  grpcPort: 9000

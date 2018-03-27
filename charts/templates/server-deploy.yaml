@@ -1,19 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: drone-server
-  namespace: drone
+  name: {{ template "server.name" . }}
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.server.replicas }}
   template:
     metadata:
       labels:
-        app: drone-server
+        app: {{ template "server.name" . }}
     spec:
       containers:
-      - image: drone/drone:0.8
+      - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
         imagePullPolicy: IfNotPresent
-        name: pipeline-server
+        name: {{ template "server.name" . }}
         ports:
         - containerPort: 8000
           protocol: TCP
@@ -21,83 +21,59 @@ spec:
           protocol: TCP
         volumeMounts:
           # Persist our configs in an SQLite DB in here
-          - name: drone-server-sqlite-db
-            mountPath: /var/lib/piped
+          - name: {{ .Values.db.conf.name }}
+            mountPath: {{ .Values.db.conf.mountPath }}
           # Enables Docker in Docker
           - name: docker-socket
-            mountPath: /var/run/docker.sock
+            mountPath: {{ .Values.dind.mountPath }}
         resources:
-          requests:
-            cpu: 40m
-            memory: 32Mi
+{{ .Values.resources | indent 8 }}
         env:
         - name: DRONE_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.host
+          value: {{ .Values.server.host }}
+        - name: DRONE_DEBUG
+          value: {{ .Values.server.debug}}
         - name: DRONE_OPEN
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.open
+          value: {{ .Values.server.open }}
         - name: DRONE_DATABASE_DRIVER
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.database.driver
+          value: {{ .Values.db.driver }}
         - name: DRONE_DATABASE_DATASOURCE
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.database.datasource
+          value: {{ .Values.db.source }}
+        - name: DRONE_ADMIN
+          value: {{ .Values.server.admin }}
+        - name: DRONE_GITEA
+          value: {{ .Values.remote.gitea.enabled }}
+        - name: DRONE_GITEA_URL
+          value: {{ .Values.remote.gitea.url }}
+        - name: DRONE_GITEA_SKIP_VERIFY
+          value: {{ .Values.remote.gitea.skip.verify }}
         - name: DRONE_SECRET
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: server.secret
-        - name: DRONE_ADMIN
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.admin
+              key: secret
+{{ if .Values.github }}
         - name: DRONE_GITHUB
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.github
+          value: true
         - name: DRONE_GITHUB_CLIENT
           valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.github.client
+            secretKeyRef:
+              name: drone-secrets
+              key: github-client.toml
         - name: DRONE_GITHUB_SECRET
           valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.github.secret
-        - name: DRONE_GITEA
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.gitea
-        - name: DRONE_GITEA_URL
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.gitea.url
-        - name: DRONE_GITEA_SKIP_VERIFY
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.remote.gitea.skip.verify
-        - name: DRONE_DEBUG
-          valueFrom:
-            configMapKeyRef:
-              name: drone-config
-              key: server.debug
-
+            secretKeyRef:
+              name: drone-secrets
+              key: github-secret.toml
+{{ end -}}
       volumes:
+        - name: data
+{{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "mysql.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+{{- end -}}
         - name: drone-server-sqlite-db
           gcePersistentDisk:
             pdName:  drone-server-sqlite-db
