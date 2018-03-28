@@ -8,7 +8,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "server.name" . }}
+        app: {{ template "drone.name" . }}
     spec:
       containers:
       - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
@@ -49,7 +49,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: secret
+              key: drone-secret.toml
 {{ if .Values.github }}
         - name: DRONE_GITHUB
           value: true
