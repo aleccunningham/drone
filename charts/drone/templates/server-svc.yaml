@@ -4,16 +4,16 @@ metadata:
   name: {{ template "drone.name" . }}
   namespace: {{ .Values.namespace }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.server.service.type }}
   # type: NodePort
   ports:
   - name: http
     protocol: TCP
     port: 80
-    targetPort: {{ .Values.service.httpPort }}
+    targetPort: {{ .Values.server.service.httpPort }}
   - name: grpc
     protocol: TCP
-    port: {{ .Values.service.grpcPort }}
-    targetPort: {{ .Values.service.grpcPort }}
+    port: {{ .Values.server.service.grpcPort }}
+    targetPort: {{ .Values.server.service.grpcPort }}
   selector:
-    app: {{ template "server.name" . }}
+    app: {{ template "drone.name" . }}

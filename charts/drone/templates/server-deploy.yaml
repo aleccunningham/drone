@@ -13,7 +13,7 @@ spec:
       containers:
       - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
         imagePullPolicy: IfNotPresent
-        name: {{ template "server.name" . }}
+        name: {{ template "drone.name" . }}
         ports:
         - containerPort: 8000
           protocol: TCP
@@ -25,7 +25,7 @@ spec:
           - name: docker-socket
             mountPath: {{ .Values.dind.mountPath }}
         resources:
-{{ .Values.resources | indent 8 }}
+{{ toYaml .Values.resources | indent 8 }}
         env:
         - name: DRONE_HOST
           value: {{ .Values.server.host }}
@@ -40,16 +40,16 @@ spec:
         - name: DRONE_ADMIN
           value: {{ .Values.server.admin }}
         - name: DRONE_GITEA
-          value: {{ .Values.remote.gitea.enabled }}
+          value: {{ .Values.gitea.enabled }}
         - name: DRONE_GITEA_URL
-          value: {{ .Values.remote.gitea.url }}
+          value: {{ .Values.gitea.url }}
         - name: DRONE_GITEA_SKIP_VERIFY
-          value: {{ .Values.remote.gitea.skip.verify }}
+          value: {{ .Values.gitea.skip.verify }}
         - name: DRONE_SECRET
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: drone-secret.toml
+              key: dronesecret.toml
 {{ if .Values.github }}
         - name: DRONE_GITHUB
           value: true
@@ -57,21 +57,21 @@ spec:
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: github-client.toml
+              key: githubclient.toml
         - name: DRONE_GITHUB_SECRET
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: github-secret.toml
-{{ end -}}
+              key: githubsecret.toml
+{{ end }}
       volumes:
         - name: {{ .Values.db.conf.name }}
 {{- if .Values.db.enabled }}
           persistentVolumeClaim:
           claimName: {{ .Values.db.existingClaim | default "drone-data" }}
       {{- else }}
-        emptyDir: {}
-{{- end -}}
+        emptyDir:
+{{ end }}
         - name: docker-socket
           hostPath:
             path: /var/run/docker.sock

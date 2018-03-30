@@ -20,13 +20,6 @@ agent:
   imageTag: "0.8"
   imageRegistry: "drone"
   replicas: 1
-  resources:
-    limits:
-      cpu: 200m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 64Mi
   procs:
     max: 1
   keepalive:
@@ -37,7 +30,11 @@ agent:
     enabled: false
     pretty: true
 
+github:
+  enabled: true
+
 db:
+  enabled: true
   driver: sqlite3
   source: drone.sqlite
   conf:
@@ -76,3 +73,11 @@ livenessProbe:
     port: 3000
   initialDelaySeconds: 3
   periodSeconds: 3
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128
+  requests:
+    cpu: 100m
+    memory: 64

@@ -1,26 +1,26 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Values.agent.name }}
+  name: drone-agent
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.agent.replicas }}
   template:
     metadata:
       labels:
-        app: {{ template "agent.name" . }}
+        app: drone-agent
     spec:
       containers:
       - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
         imagePullPolicy: IfNotPresent
-        name: {{ .Values.agent.name }}
+        name: drone-agent
         volumeMounts:
           - name: docker-socket
             mountPath: {{ .Values.dind.mountPath }}
         resources:
-{{ .Values.resources | indent 8 }}
+{{ toYaml .Values.resources | indent 10 }}
         livenessProbe:
-{{ .Values.livenessProbe | indent 8 }}
+{{ toYaml .Values.livenessProbe | indent 10 }}
         env:
         - name: DRONE_SERVER
           value: {{ .Values.server.service.name }}:{{ .Values.server.service.grpcPort }}
