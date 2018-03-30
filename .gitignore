@@ -7,5 +7,5 @@ drone/drone
 .env
 extras/
 release/
-
+secrets/
 server/swagger/files/*.json

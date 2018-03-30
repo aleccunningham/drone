@@ -20,7 +20,7 @@ with each file containing the associated secret. The Drone token, a required sec
 To install the chart with the release name `drone-ci`:
 
 ```bash
-$ helm --tiller-namespace tiller-server --tls install --name drone-ci cncd/drone --namespace drone --values [values.yaml]
+$ helm --tiller-namespace tiller-server --tls install --name drone-ci cncd/drone --namespace drone
 ```
 
 The command deploys Drone on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -53,14 +53,12 @@ The following table lists the configurable parameters of the Drone chart and the
 | `server.imageRegistry`                | Docker registry to pull from              | `drone`                         |
 | `server.admin`                        | Registered github administrators          | appleboy                        |
 | `server.debug`                        | Debug mode                                | `false`                         |
-| `server.resources`                    | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`    |
+| `server.open`                         | Set drone open to registration or not     | `true`                          |
+| `server.host`                         | Drone server hostname                     | drone.cncd.io                   |
+| `server.service.name`                 | Service name for the Drone server         | drone-service                   |
 | `server.service.type`                 | Service type for the Drone server         | `LoadBalancer`                  |
 | `server.service.httpPort`             | Exposed port for Web UI                   | 8000                            |
 | `server.service.grpcPort`             | Exposed port for gRPC calls to clients    | 9000                            |
-| `db.driver`                           | Delay before liveness probe is initiated  | sqlite3                         |
-| `db.source`                           | How often to perform the probe            | `nil`                           |
-| `db.conf.name`                        | When the probe times out                  | drone-server-sqlite-db          |
-| `db.conf.mountPath`                   | Path to mount database config to          | /var/lib/drone                  |
 | `agent.name`                          | Kubernetes name selector for agent        | `drone-agent`                   |
 | `agent.image`                         | Image to use for Drone's agent            | `drone-agent`                   |
 | `agent.imageTag`                      | Drone-agent image tag                     | `0.8`                           |
@@ -72,7 +70,15 @@ The following table lists the configurable parameters of the Drone chart and the
 | `agent.healthCheck`                   | Enabled gRPC healthchecking               | `true`                          |
 | `agent.debug.enabled`                 | Debug mode                                | `false`                         |
 | `agent.debug.pretty`                  | Pretty logs                               | `true`                          |
-| `agent.resources`                     | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`    |
+| `github.enabled`                      | Enable remote Github integration          | `true`                          |
+| `rbac.enabled`                        | Enabled `rbac` permissions                | `true`                          |
+| `rbac.serviceAccountName`             | Drone service account name                | `LoadBalancer`                  |
+| `db.enabled`                          | Create an external database service       | sqlite3                         |
+| `db.driver`                           | Delay before liveness probe is initiated  | sqlite3                         |
+| `db.source`                           | How often to perform the probe            | `nil`                           |
+| `db.conf.name`                        | When the probe times out                  | drone-server-sqlite-db          |
+| `db.conf.mountPath`                   | Path to mount database config to          | /var/lib/drone                  |
+| `docker.apiVersion`                   | API Docker daemon to use for execution    | 1.24        |
 | `dind.mountPath`                      | Path to docker daemon to expose           | `/var/run/docker.sock`          |
 | `gitea.enabled`                       | List of mysql configuration files         | `true`                          |
 | `gitea.url`                           | Subdirectory of the volume to mount       | https://try.gitea.io            |
@@ -80,12 +86,11 @@ The following table lists the configurable parameters of the Drone chart and the
 | `persistence.enabled`                 | Whether to enable persistence via a `pvc` | `true`                          |
 | `persistence.accessMode`              | Subdirectory of the volume to mount       | `ReadWriteOnce`                 |
 | `persistence.size`                    | Size of persistent storage                | `8Gi`                           |
-| `configurationFiles`                  | List of mysql configuration files         | `nil`                           |
 | `livenessProbe.httpGet.path`          | List of mysql configuration files         | `nil`                           |
 | `livenessProbe.httpGet.port`          | List of mysql configuration files         | `nil`                           |
 | `livenessProbe.initialDelaySeconds`   | List of mysql configuration files         | `nil`                           |
 | `livenessProbe.periodSeconds`         | List of mysql configuration files         | `nil`                           |
-
+| `resources`                           | CPU/Memory resource requests/limits       | Memory: `256Mi`, CPU: `100m`    |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -98,7 +103,7 @@ The above command creates a policy creating three replicas of the `drone-agent` 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release -f values.yaml stable/drone
+$ helm --tiller-namespace tiller-server --tls install --name drone-ci -f values.yaml stable/drone
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
