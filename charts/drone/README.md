@@ -15,7 +15,10 @@ This chart bootstraps a single node Drone server and agent deployment on a [Kube
 
 Prior to running helm commands, create a `secrets/` directory inside `charts/`, and set secrets with this naming scheme:
 ```secret-name.toml```
-with each file containing the associated secret. The Drone token, a required secret, can be generated using the `openssl` tool: ```openssl rand -base64 8 | md5 | head -c8; echo```. Copy the generated string into a file `drone-secret.toml` containing the string. Helm will base64 encode the secret for you on installation.
+with each file containing the associated secret.
+The Drone token, a required secret, can be generated using the `openssl` tool:
+ ```openssl rand -base64 8 | md5 | head -c8; echo```
+Copy the generated string into a file `drone-secret.toml` containing the string. Helm will base64 encode the secret for you on installation.
 
 To install the chart with the release name `drone-ci`:
 
