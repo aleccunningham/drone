@@ -23,14 +23,7 @@ To install the chart with the release name `my-release`:
 $ helm install --name my-release stable/mysql
 ```
 
-The command deploys MySQL on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
-
-By default a random password will be generated for the root user. If you'd like to set your own password change the mysqlRootPassword
-in the values.yaml.
-
-You can retrieve your root password by running the following command. Make sure to replace [YOUR_RELEASE_NAME]:
-
-    printf $(printf '\%o' `kubectl get secret [YOUR_RELEASE_NAME]-mysql -o jsonpath="{.data.mysql-root-password[*]}"`)
+The command deploys Drone on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
