@@ -13,14 +13,14 @@ This chart bootstraps a single node Drone server and agent deployment on a [Kube
 
 ## Installing the Chart
 
-Prior to running helm commands, create a `secrets/` directory inside `charts/`, and set secrets as follows:
+Prior to running helm commands, create a `secrets/` directory inside `charts/`, and set secrets with this naming scheme:
 ```secret-name.toml```
-You can then reference them in manifests via `secretKeyRef`'s set to the secrets file name.
+with each file containing the associated secret. The Drone token, a required secret, can be generated using the `openssl` tool: ```openssl rand -base64 8 | md5 | head -c8; echo```. Copy the generated string into a file `drone-secret.toml` containing the string. Helm will base64 encode the secret for you on installation.
 
-To install the chart with the release name `my-release`:
+To install the chart with the release name `drone-ci`:
 
 ```bash
-$ helm install --name my-release stable/mysql
+$ helm --tiller-namespace tiller-server --tls install --name drone-ci cncd/drone --namespace drone --values [values.yaml]
 ```
 
 The command deploys Drone on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -29,13 +29,17 @@ The command deploys Drone on the Kubernetes cluster in the default configuration
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `drone-ci` deployment:
 
 ```bash
-$ helm delete my-release
+$ helm --tiller-namespace tiller-server --tls delete drone-ci
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+The command removes all the Kubernetes components associated with the chart and deletes the release. In order to remove *all* associated manifests (i.e. `ConfigMap`s and `Secret`s), modified the command with the `--purge` flag:
+
+```bash
+$ helm --tiller-namespace tiller-server --tls delete --purge drone-ci
+```
 
 ## Configuration
 
@@ -86,10 +90,10 @@ The following table lists the configurable parameters of the Drone chart and the
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release --set namespace=drone,agent.replicas=3 stable/drone
+$ helm --tiller-namespace tiller-server --tls install --name drone-ci --set agent.replicas=3 cncd/drone
 ```
 
-The above command restricts the Drone release to the `drone` namespace. Additionally it creates a a policy creating three replicas of the `drone-agent` deployment.
+The above command creates a policy creating three replicas of the `drone-agent` deployment.
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
@@ -105,5 +109,11 @@ The [Drone](https://hub.docker.com/drone/drone/) image stores data and configura
 
 By default a PersistentVolumeClaim is created and mounted into that directory. In order to disable this functionality
 you can change the values.yaml to disable persistence and use an emptyDir instead.
+
+You must create a persistent disk to pair with the `pvc.yaml` - for example, create a Google Cloud Platform Compute Engine disk:
+
+```bash
+$ gcloud compute disks create --size 10GB drone-data
+```
 
 > *"An emptyDir volume is first created when a Pod is assigned to a Node, and exists as long as that Pod is running on that node. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted forever."*
