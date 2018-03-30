@@ -55,7 +55,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: dronesecret.toml
+              key: drone-secret.toml
 {{ if .Values.github }}
         - name: DRONE_GITHUB
           value: "true"
@@ -63,12 +63,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: githubclient.toml
+              key: github-client.toml
         - name: DRONE_GITHUB_SECRET
           valueFrom:
             secretKeyRef:
               name: drone-secrets
-              key: githubsecret.toml
+              key: github-secret.toml
 {{ end }}
       volumes:
         - name: {{ .Values.db.conf.name }}
