@@ -2,7 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "drone.name" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.namespace }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   type: {{ .Values.server.service.type }}
   # type: NodePort

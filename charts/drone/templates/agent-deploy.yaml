@@ -2,7 +2,11 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: drone-agent
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.agent.replicas }}
   template:
@@ -11,7 +15,7 @@ spec:
         app: drone-agent
     spec:
       containers:
-      - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
+      - image: "{{ .Values.agent.imageRegistry }}/{{ .Values.agent.image }}:{{ .Values.agent.imageTag }}"
         imagePullPolicy: IfNotPresent
         name: drone-agent
         volumeMounts:
@@ -20,24 +24,24 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         livenessProbe:
-{{ toYaml .Values.livenessProbe | indent 10 }}
+{{ toYaml .Values.livenessProbe | indent 12 }}
         env:
         - name: DRONE_SERVER
-          value: {{ .Values.server.service.name }}:{{ .Values.server.service.grpcPort }}
+          value: "{{ .Values.server.service.name }}:{{ .Values.server.service.grpcPort }}"
         - name: DOCKER_API_VERSION
           value: {{ .Values.docker.apiVersion | quote }}
         - name: DRONE_MAX_PROCS
           value: {{ .Values.agent.procs.max }}
         - name: DRONE_DEBUG
-          value: {{ .Values.agent.debug.enabled }}
+          value: {{ .Values.agent.debug.enabled | quote }}
         - name: DRONE_DEBUG_PRETTY
-          value: {{ .Values.agent.debug.pretty }}
+          value: {{ .Values.agent.debug.pretty | quote }}
         - name: DRONE_HEALTHCHECK
-          value: {{ .Values.agent.healthcheck }}
+          value: {{ .Values.agent.healthcheck | quote }}
         - name: DRONE_KEEPALIVE_TIME
-          value: {{ .Values.agent.keepalive.time }}
+          value: {{ .Values.agent.keepalive.time | quote }}
         - name: DRONE_KEEPALIVE_TIMEOUT
-          value: {{ .Values.agent.keepalive.timeout }}
+          value: {{ .Values.agent.keepalive.timeout | quote }}
         - name: DRONE_SECRET
           valueFrom:
             secretKeyRef:

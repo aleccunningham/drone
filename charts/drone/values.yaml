@@ -1,11 +1,13 @@
 namespace: drone
 
 server:
-  image: "drone"
-  imageTag: "0.8"
-  imageRegistry: "drone"
+  image: drone
+  imageTag: 0.8
+  imageRegistry: drone
   admin: appleboy
   debug: true
+  open: true
+  host: drone.nsnd.io
   ## Configure the service
   service:
     name: drone-service
@@ -16,15 +18,15 @@ server:
 
 agent:
   name: drone-agent
-  image: "drone-agent"
-  imageTag: "0.8"
-  imageRegistry: "drone"
+  image: drone-agent
+  imageTag: 0.8
+  imageRegistry: drone
   replicas: 1
   procs:
     max: 1
   keepalive:
-    time: "1s"
-    timeout: "5s"
+    time: 1s
+    timeout: 5s
   healthcheck: true
   debug:
     enabled: false
@@ -33,12 +35,18 @@ agent:
 github:
   enabled: true
 
+rbac:
+  ## If true, create & use RBAC resources
+  create: false
+  ## Ignored if rbac.create is true
+  serviceAccountName: default
+
 db:
   enabled: true
   driver: sqlite3
   source: drone.sqlite
   conf:
-    name: data
+    name: drone-data
     mountPath: /var/lib/drone
 
 docker:
@@ -49,7 +57,7 @@ dind:
 
 gitea:
   enabled: true
-  url: "https://try.gitea.io"
+  url: https://try.gitea.io
   skip:
     verify: true
 

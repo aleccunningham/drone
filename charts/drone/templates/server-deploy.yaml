@@ -2,7 +2,11 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: {{ template "drone.name" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.namespace }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.server.replicas }}
   template:
@@ -11,7 +15,7 @@ spec:
         app: {{ template "drone.name" . }}
     spec:
       containers:
-      - image: "{{ .Values.imageRegistry }}/{{ .Values.image }}:{{ .Values.imageTag }}"
+      - image: "{{ .Values.server.imageRegistry }}/{{ .Values.server.image }}:{{ .Values.server.imageTag }}"
         imagePullPolicy: IfNotPresent
         name: {{ template "drone.name" . }}
         ports:
@@ -20,31 +24,33 @@ spec:
         - containerPort: 9000
           protocol: TCP
         volumeMounts:
-          - name: {{ .Values.db.conf.name }}
-            mountPath: {{ .Values.db.conf.mountPath }}
-          - name: docker-socket
-            mountPath: {{ .Values.dind.mountPath }}
+        - name: {{ .Values.db.conf.name }}
+          mountPath: {{ .Values.db.conf.mountPath }}
+        - name: docker-socket
+          mountPath: {{ .Values.dind.mountPath }}
         resources:
-{{ toYaml .Values.resources | indent 8 }}
+{{ toYaml .Values.resources | indent 10 }}
+        livenessProbe:
+{{ toYaml .Values.livenessProbe | indent 12 }}
         env:
         - name: DRONE_HOST
-          value: {{ .Values.server.host }}
+          value: "{{ .Values.server.host }}"
         - name: DRONE_DEBUG
-          value: {{ .Values.server.debug}}
+          value: "{{ .Values.server.debug}}"
         - name: DRONE_OPEN
-          value: {{ .Values.server.open }}
+          value: "{{ .Values.server.open }}"
         - name: DRONE_DATABASE_DRIVER
-          value: {{ .Values.db.driver }}
+          value: "{{ .Values.db.driver }}"
         - name: DRONE_DATABASE_DATASOURCE
-          value: {{ .Values.db.source }}
+          value: "{{ .Values.db.source }}"
         - name: DRONE_ADMIN
-          value: {{ .Values.server.admin }}
+          value: "{{ .Values.server.admin }}"
         - name: DRONE_GITEA
-          value: {{ .Values.gitea.enabled }}
+          value: "{{ .Values.gitea.enabled }}"
         - name: DRONE_GITEA_URL
-          value: {{ .Values.gitea.url }}
+          value: "{{ .Values.gitea.url }}"
         - name: DRONE_GITEA_SKIP_VERIFY
-          value: {{ .Values.gitea.skip.verify }}
+          value: "{{ .Values.gitea.skip.verify }}"
         - name: DRONE_SECRET
           valueFrom:
             secretKeyRef:
@@ -52,7 +58,7 @@ spec:
               key: dronesecret.toml
 {{ if .Values.github }}
         - name: DRONE_GITHUB
-          value: true
+          value: "true"
         - name: DRONE_GITHUB_CLIENT
           valueFrom:
             secretKeyRef:
@@ -66,10 +72,9 @@ spec:
 {{ end }}
       volumes:
         - name: {{ .Values.db.conf.name }}
-{{- if .Values.db.enabled }}
+{{ if .Values.db.enabled }}
           persistentVolumeClaim:
-          claimName: {{ .Values.db.existingClaim | default "drone-data" }}
-      {{- else }}
+      {{ else }}
         emptyDir:
 {{ end }}
         - name: docker-socket

@@ -1,12 +1,11 @@
+{{- if .Values.rbac.create -}}
 apiVersion: v1
-kind: Secret
+kind: ServiceAccount
 metadata:
-  name: drone-secrets
-  namespace: {{ .Values.namespace }}
   labels:
     app: {{ template "drone.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-data:
-{{ (.Files.Glob "secrets/*.toml").AsSecrets | indent 2 }}
+  name: {{ template "drone.fullname" . }}
+{{- end -}}

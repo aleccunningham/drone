@@ -2,6 +2,8 @@ drone/drone
 *.sqlite
 *.txt
 *.out
+*.pem
+*.srl
 .env
 extras/
 release/
